@@ -1,5 +1,5 @@
 #This is all curry box scores from regular season games (DOES NOT INCLUDE EMIRATES CUP)
-# before 2026-01-07 (YYYY-MM-DD) (script was initially ran on 1-07-2026)
+#From the 2015-2016 to 2024-2025 seasons.
 
 #/eoinamoore/historical-nba-data-and-player-box-scores?select=PlayerStatistics.csv
 
@@ -34,14 +34,14 @@ def main():
             curry_chunk = chunk[
                 (chunk['firstName'] == 'Stephen') &
                 (chunk['lastName'] == 'Curry')
-            ]
+            ].copy()
             if not curry_chunk.empty:
-                curry_chunk['gameDateTimeEst'] = pd.to_datetime(curry_chunk['gameDateTimeEst'])
+                curry_chunk.loc[:, 'gameDateTimeEst'] = pd.to_datetime(curry_chunk['gameDateTimeEst'])
 
                 mask = (
                     (curry_chunk['gameType'] == 'Regular Season') &
-                    (curry_chunk['gameDateTimeEst'] >= '2015-07-01') &
-                    (curry_chunk['gameDateTimeEst'] <= '2025-07-01')
+                    (curry_chunk['gameDateTimeEst'] >= pd.to_datetime('2013-07-01')) &
+                    (curry_chunk['gameDateTimeEst'] <= pd.to_datetime('2025-07-01'))
                 )
 
                 curry_chunk = curry_chunk[mask]
