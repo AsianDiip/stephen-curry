@@ -39,7 +39,7 @@ def main():
                 curry_chunk.loc[:, 'gameDateTimeEst'] = pd.to_datetime(curry_chunk['gameDateTimeEst'])
 
                 mask = (
-                    (curry_chunk['gameType'] == 'Regular Season') &
+                    (curry_chunk['gameType'].isin(['Regular Season', 'NBA Emirates Cup'])) &
                     (curry_chunk['gameDateTimeEst'] >= pd.to_datetime('2013-07-01')) &
                     (curry_chunk['gameDateTimeEst'] <= pd.to_datetime('2025-07-01'))
                 )
