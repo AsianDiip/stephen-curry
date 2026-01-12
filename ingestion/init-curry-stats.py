@@ -1,59 +1,27 @@
-#This is all curry box scores from regular season games (DOES NOT INCLUDE EMIRATES CUP)
-#From the 2015-2016 to 2024-2025 seasons.
-
-#/eoinamoore/historical-nba-data-and-player-box-scores?select=PlayerStatistics.csv
-
-import os
 import pandas as pd
-from kaggle.api.kaggle_api_extended import KaggleApi
-import tempfile
+import time
+from pathlib import Path
 
-DATASET = "eoinamoore/historical-nba-data-and-player-box-scores"
-CSV_FILE = "PlayerStatistics.csv"
-DEST_DIR = "data/raw/nba"
-OUTPUT_FILE = os.path.join(DEST_DIR, "Stephen_Curry_Stats_Init.csv")
-PLAYER_NAME = "Stephen Curry"
+data_dir = Path('stephen-curry/data/raw/nba')
+data_file = data_dir / 'curry_13_14_25_26.parquet'
+url = 'https://www.basketball-reference.com/players/c/curryst01/gamelog/2014'
+dfs = pd.read_html(url)
+raw_curry_games = dfs[7]
+raw_curry_games = raw_curry_games[raw_curry_games['Rk'] != 'Rk'].reset_index()
+raw_curry_games = raw_curry_games.drop(['index', 'Unnamed: 5'], axis=1)
+time.sleep(2)
 
-os.makedirs(DEST_DIR, exist_ok = True)
+for year in range(2015, 2026):
+    year_url = f'https://www.basketball-reference.com/players/c/curryst01/gamelog/{year}'
+    dfs = pd.read_html(year_url)
+    unclean = dfs[7]
+    clean = unclean[unclean['Rk'] != 'Rk'].reset_index().drop(['index', 'Unnamed: 5'], axis=1)
+    raw_curry_games = pd.concat([raw_curry_games, clean], axis=0, ignore_index=True)
+    time.sleep(2)
 
-api = KaggleApi()
-api.authenticate()
+curry_games = raw_curry_games[raw_curry_games['Rk'].notna()].reset_index().drop('index', axis = 1)
 
-def main():
-    with tempfile.TemporaryDirectory() as tmpdir:
-        temp_path = os.path.join(tmpdir, CSV_FILE)
-        api.dataset_download_file(
-            dataset = DATASET,
-            file_name = CSV_FILE, 
-            path = tmpdir,
-            force = True
-        )
 
-        curry_rows = []
-        for chunk in pd.read_csv(temp_path, chunksize = 100000):
-            curry_chunk = chunk[
-                (chunk['firstName'] == 'Stephen') &
-                (chunk['lastName'] == 'Curry')
-            ].copy()
-            if not curry_chunk.empty:
-                curry_chunk.loc[:, 'gameDateTimeEst'] = pd.to_datetime(curry_chunk['gameDateTimeEst'])
+data_dir.mkdir(parents = True, exist_ok = True)
 
-                mask = (
-                    (curry_chunk['gameType'].isin(['Regular Season', 'NBA Emirates Cup'])) &
-                    (curry_chunk['gameDateTimeEst'] >= pd.to_datetime('2013-07-01')) &
-                    (curry_chunk['gameDateTimeEst'] <= pd.to_datetime('2025-07-01'))
-                )
-
-                curry_chunk = curry_chunk[mask]
-
-                if not curry_chunk.empty:
-                    curry_rows.append(curry_chunk)
-
-        if curry_rows:
-            curry_stats = pd.concat(curry_rows, ignore_index = True)
-            curry_stats.to_csv(OUTPUT_FILE, index = False)
-        else:
-            print("Curry rows empty")
-
-main()
-
+curry_games.to_parquet(data_file)
