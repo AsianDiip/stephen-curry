@@ -1,9 +1,18 @@
+"""
+Pandas Webscraper
+
+Data is Taken from Basketball Reference
+
+Data includes all regular season game during Curry's Career from the 2013-2014 season to the 2024-2025 season
+INCLUDING games where he did not dress or play, and therefore will match up with the number of regular season games
+that the GSW have played in those seasons
+"""
 import pandas as pd
 import time
 from pathlib import Path
 
-data_dir = Path('stephen-curry/data/raw/nba')
-data_file = data_dir / 'curry_13_14_25_26.parquet'
+data_dir = Path(__file__).parent.parent / 'data' / 'raw' / 'nba'
+data_file = data_dir / 'curry_13_14_24_25.parquet'
 url = 'https://www.basketball-reference.com/players/c/curryst01/gamelog/2014'
 dfs = pd.read_html(url)
 raw_curry_games = dfs[7]
